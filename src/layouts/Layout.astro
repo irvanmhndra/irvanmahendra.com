@@ -1,0 +1,46 @@
+---
+import '../styles/global.css'
+
+interface Props {
+  title: string
+  description?: string
+  image?: string
+}
+
+const {
+  title,
+  description = 'Passionate software engineer specializing in Go, Ruby on Rails, and scalable backend systems. Currently developing MekariSign at Mekari.',
+  image = '/avatar.png',
+} = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content="software engineer, golang, ruby on rails, backend developer, mekari, digital signature" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://irvanmahendra.com" />
+    <meta property="og:image" content={image} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+    <!-- Prevent FOUC: apply theme before first paint -->
+    <script is:inline>
+      ;(function () {
+        const theme = localStorage.getItem('theme') || 'light'
+        document.documentElement.setAttribute('data-theme', theme)
+      })()
+    </script>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
