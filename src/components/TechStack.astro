@@ -1,0 +1,59 @@
+---
+import {
+  siRuby,
+  siRubyonrails,
+  siGo,
+  siJavascript,
+  siReact,
+  siNodedotjs,
+  siPostgresql,
+  siMysql,
+  siMongodb,
+  siRedis,
+  siDocker,
+  siKubernetes,
+  siGit,
+  siAmazonwebservices,
+} from 'simple-icons/icons'
+
+const technologies = [
+  { name: 'Ruby', icon: siRuby },
+  { name: 'Ruby on Rails', icon: siRubyonrails },
+  { name: 'Go', icon: siGo },
+  { name: 'JavaScript', icon: siJavascript },
+  { name: 'React', icon: siReact },
+  { name: 'Node.js', icon: siNodedotjs },
+  { name: 'PostgreSQL', icon: siPostgresql },
+  { name: 'MySQL', icon: siMysql },
+  { name: 'MongoDB', icon: siMongodb },
+  { name: 'Redis', icon: siRedis },
+  { name: 'Docker', icon: siDocker },
+  { name: 'Kubernetes', icon: siKubernetes },
+  { name: 'Git', icon: siGit },
+  { name: 'AWS', icon: siAmazonwebservices },
+]
+---
+
+<section id="tech-stack" class="section">
+  <div class="container">
+    <h2>Tech Stack</h2>
+    <div class="tech-grid">
+      {technologies.map((tech) => (
+        <div class="tech-item">
+          <svg
+            role="img"
+            viewBox="0 0 24 24"
+            width="40"
+            height="40"
+            style={`fill: #${tech.icon.hex}`}
+            class="tech-icon"
+            aria-label={tech.name}
+          >
+            <path d={tech.icon.path} />
+          </svg>
+          <span class="tech-name">{tech.name}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,43 @@
+---
+interface Props {
+  company: string
+  size?: number
+}
+
+const { company, size = 48 } = Astro.props
+
+const logoUrls: Record<string, string> = {
+  'Ruparupa': '/ruparupa-logo.jpeg',
+  'Mekari': '/mekari-logo.png',
+  'Admedika': '/telkom-logo.png',
+  'AsiaCommerce': '/asiacommerce-logo.png',
+}
+
+const logoUrl = logoUrls[company]
+
+const initials = company
+  .split(' ')
+  .map((w) => w[0])
+  .join('')
+  .toUpperCase()
+  .substring(0, 2)
+
+const logoStyle = `width:${size}px;height:${size}px;border-radius:8px;object-fit:contain;background-color:white;padding:6px;border:1px solid var(--border-color);box-shadow:0 2px 4px rgba(0,0,0,0.1);`
+const initialsStyle = `width:${size}px;height:${size}px;border-radius:8px;background-color:var(--bg-secondary);border:1px solid var(--border-color);box-shadow:0 2px 4px rgba(0,0,0,0.1);align-items:center;justify-content:center;font-size:16px;font-weight:bold;color:var(--text-primary);`
+---
+
+<div class="company-logo">
+  {logoUrl ? (
+    <>
+      <img
+        src={logoUrl}
+        alt={`${company} logo`}
+        style={logoStyle}
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+      />
+      <div style={`display:none;${initialsStyle}`}>{initials}</div>
+    </>
+  ) : (
+    <div style={`display:flex;${initialsStyle}`}>{initials}</div>
+  )}
+</div>
