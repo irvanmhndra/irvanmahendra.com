@@ -16,6 +16,3 @@ node_modules/
 # IDE
 .idea/
 .vscode/
-
-# Local docs (not for repo)
-DEPLOYMENT.md
