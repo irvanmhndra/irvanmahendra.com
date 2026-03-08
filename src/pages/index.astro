@@ -1,0 +1,254 @@
+---
+import Layout from '../layouts/Layout.astro'
+import ThemeToggle from '../components/ThemeToggle.astro'
+import TechStack from '../components/TechStack.astro'
+import CompanyLogo from '../components/CompanyLogo.astro'
+---
+
+<Layout title="Irvan Eksa Mahendra - Software Engineer">
+  <div class="App">
+    <header class="header">
+      <div class="container">
+        <nav class="top-nav">
+          <div class="nav-links">
+            <a href="#about">About</a>
+            <a href="#experience">Experience</a>
+            <a href="#tech-stack">Tech Stack</a>
+            <a href="/blog">Blog</a>
+            <a href="#contact">Contact</a>
+          </div>
+          <ThemeToggle />
+        </nav>
+
+        <div class="hero-content">
+          <div class="hero-text">
+            <h1 class="hero-title">
+              Hey, I'm <span class="highlight">Irvan Eksa Mahendra</span>
+            </h1>
+            <p class="hero-subtitle">
+              Backend engineer who ships. From empty repos to thousands of users — I've built systems from scratch, rescued legacy codebases, and made infrastructure boring enough to sleep through the night. 5 years of turning "can we even do this?" into production.
+            </p>
+            <div class="hero-info">
+              <div class="info-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>Jakarta, Indonesia</span>
+              </div>
+              <div class="info-item">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Currently not open for opportunities</span>
+              </div>
+            </div>
+            <div class="hero-actions">
+              <a href="#contact" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                </svg>
+                Get in touch
+              </a>
+              <a href="/CV - Irvan Eksa Mahendra (latest).pdf" class="btn btn-secondary" download>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download CV
+              </a>
+            </div>
+          </div>
+          <div class="hero-avatar">
+            <img src="/avatar.png" alt="Irvan Eksa Mahendra" class="avatar" />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="about" class="section">
+        <div class="container">
+          <h2>About Me</h2>
+          <div class="about-content">
+            <p>
+              I'm a software engineer with 5 years of experience building and scaling backend systems in the SaaS space. I've shipped products from day zero to tens of thousands of users, and I've inherited codebases that made me question everything I knew about software.
+            </p>
+            <p>
+              I gravitate toward hard problems — designing systems from scratch, making legacy code behave, optimizing the query that somehow takes 12 seconds, or convincing a distributed system to be consistent when it really doesn't want to be. I'm language-agnostic and pick up new stacks fast, but I have strong opinions about clean abstractions and boring, predictable infrastructure.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="experience" class="section">
+        <div class="container">
+          <h2>Experience</h2>
+          <div class="timeline">
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <div class="timeline-title">
+                    <CompanyLogo company="Ruparupa" size={48} />
+                    <div>
+                      <span class="company">Ruparupa</span>
+                      <h3>Software Engineer</h3>
+                    </div>
+                  </div>
+                  <span class="period">Sep 2025 - Present</span>
+                </div>
+                <div class="timeline-description">
+                  <ul>
+                    <li>Supported the organization-wide transition from Gitflow to Trunk-Based Development (TBD) as the Subject Matter Expert, helping design the branching strategy and CI/CD adjustments across 8 teams and 62 services/repositories.</li>
+                    <li>Initiated and designed the migration from NGINX to Kong API Gateway, establishing a centralized gateway architecture to replace premature BFF and improve routing flexibility and scalability.</li>
+                    <li>Implemented zero-downtime schema migrations using Percona pt-online-schema-change (pt-osc), including altering the vouchers monetary column (DECIMAL(10,2)) which removed the 99M value limit and unblocked a B2B deal involving 2 billion transaction requests.</li>
+                    <li>Improved observability and alerting using Grafana and Prometheus, eliminating blind spots previously discovered only through user complaints.</li>
+                  </ul>
+                </div>
+                <div class="timeline-technologies">
+                  <span class="tech-tag">Golang</span>
+                  <span class="tech-tag">MySQL</span>
+                  <span class="tech-tag">MongoDB</span>
+                  <span class="tech-tag">Sqitch</span>
+                  <span class="tech-tag">Kong</span>
+                  <span class="tech-tag">Grafana</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <div class="timeline-title">
+                    <CompanyLogo company="Mekari" size={48} />
+                    <div>
+                      <span class="company">Mekari</span>
+                      <h3>Software Engineer</h3>
+                    </div>
+                  </div>
+                  <span class="period">Dec 2021 - Aug 2025</span>
+                </div>
+                <div class="timeline-description">
+                  <ul>
+                    <li>One of the first engineering team members — helped build the core backend APIs for Mekari Sign from scratch, enabling 50,000+ users within 12 months of launch.</li>
+                    <li>Implemented Subscription Management (packages, quotas, pricing), contributing to a 30% increase in monetization feature adoption.</li>
+                    <li>Built User &amp; Workspace Management, Approval Workflow, RBAC, and Access Request modules serving 100+ companies and processing 1,000+ requests.</li>
+                    <li>Migrated 25+ legacy background jobs to Sidekiq with retry mechanisms, and integrated cross-platform features (Talenta Document Template, Firebase push notifications) with zero major issues.</li>
+                    <li>Applied TDD using RSpec, maintaining &gt;95% test coverage across the codebase.</li>
+                  </ul>
+                </div>
+                <div class="timeline-technologies">
+                  <span class="tech-tag">Ruby on Rails</span>
+                  <span class="tech-tag">PostgreSQL</span>
+                  <span class="tech-tag">Redis</span>
+                  <span class="tech-tag">Sidekiq</span>
+                  <span class="tech-tag">RSpec</span>
+                  <span class="tech-tag">Datadog</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <div class="timeline-title">
+                    <CompanyLogo company="Admedika" size={48} />
+                    <div>
+                      <span class="company">Admedika (Telkom Group)</span>
+                      <h3>Software Engineer</h3>
+                    </div>
+                  </div>
+                  <span class="period">Dec 2020 - Nov 2021</span>
+                </div>
+                <div class="timeline-description">
+                  <ul>
+                    <li>Developed and maintained healthcare applications used by insurance providers and third-party healthcare services.</li>
+                    <li>Built and enhanced application features using CodeIgniter and OracleDB.</li>
+                    <li>Identified and resolved bugs while implementing new features based on business requirements.</li>
+                  </ul>
+                </div>
+                <div class="timeline-technologies">
+                  <span class="tech-tag">PHP</span>
+                  <span class="tech-tag">CodeIgniter</span>
+                  <span class="tech-tag">OracleDB</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <div class="timeline-header">
+                  <div class="timeline-title">
+                    <CompanyLogo company="AsiaCommerce" size={48} />
+                    <div>
+                      <span class="company">AsiaCommerce</span>
+                      <h3>Software Engineer</h3>
+                    </div>
+                  </div>
+                  <span class="period">May 2020 - Nov 2020</span>
+                </div>
+                <div class="timeline-description">
+                  <ul>
+                    <li>Developed and maintained supply chain marketplace web applications using Laravel and Vue.js.</li>
+                    <li>Refactored legacy code to improve modularity, maintainability, and code quality.</li>
+                    <li>Fixed application bugs and implemented new features based on stakeholder requirements.</li>
+                  </ul>
+                </div>
+                <div class="timeline-technologies">
+                  <span class="tech-tag">Laravel</span>
+                  <span class="tech-tag">Vue.js</span>
+                  <span class="tech-tag">PHP</span>
+                  <span class="tech-tag">MySQL</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <TechStack />
+
+      <section id="contact" class="section">
+        <div class="container">
+          <h2>Let's Connect</h2>
+          <p class="section-description">
+            I'm always open to discussing new opportunities, interesting projects, or just having a chat about technology.
+          </p>
+          <div class="contact-grid">
+            <a href="mailto:irvan.mahendra77@gmail.com" class="contact-card">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <h3>Email</h3>
+              <p>Drop me a line</p>
+            </a>
+            <a href="https://www.linkedin.com/in/irvanmhndra/" class="contact-card" target="_blank" rel="noopener noreferrer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+              </svg>
+              <h3>LinkedIn</h3>
+              <p>Let's connect</p>
+            </a>
+            <a href="https://github.com/irvanmhndra" class="contact-card" target="_blank" rel="noopener noreferrer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
+              </svg>
+              <h3>GitHub</h3>
+              <p>Check out my code</p>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>&copy; 2026 Irvan Eksa Mahendra. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
+</Layout>
