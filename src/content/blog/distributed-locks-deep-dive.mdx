@@ -143,7 +143,7 @@ end
 - **Process dies holding the lock**  
   - *DB row lock*: released at TX end; ensure short transactions.  
   - *Advisory lock*: released when connection closes; avoid pooled long holds.  
-  - *Redis*: rely on TTL; set TTL << expected critical section + jitter.
+  - *Redis*: rely on TTL; set TTL &lt;&lt; expected critical section + jitter.
 
 - **Clock skew / long GC pauses**  
   - Keep TTL conservative; renew if the section is long (heartbeats).
