@@ -5,7 +5,7 @@ import ThemeToggle from '../../components/ThemeToggle.astro'
 
 const posts = await getCollection('blog')
 const sortedPosts = posts.sort(
-  (a, b) => a.data.publishedAt.getTime() - b.data.publishedAt.getTime()
+  (a, b) => b.data.publishedAt.getTime() - a.data.publishedAt.getTime()
 )
 
 function formatDate(date: Date) {
