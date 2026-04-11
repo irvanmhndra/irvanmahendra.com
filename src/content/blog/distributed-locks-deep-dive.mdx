@@ -1,0 +1,204 @@
+---
+title: "Distributed Locks (Without Microservices): A Deep Dive for Real-World Monoliths"
+excerpt: "Prevent race conditions in a single-application architecture: DB row locks, Postgres advisory locks, Redis locks (SET NX PX), and when a unique constraint is all you need."
+publishedAt: 2024-07-03
+readingTime: 6
+tags: ["concurrency", "database", "redis", "engineering"]
+---
+
+## Why You Need Locks Even in a Monolith
+
+You don’t need microservices to suffer from **race conditions**. A single web app plus background workers, running on multiple processes/containers behind an Nginx/Load Balancer, can still update the same resource concurrently. Typical symptoms:
+- Duplicate order numbers or duplicate payments
+- Inventory deducted twice
+- The same background job processed by multiple workers
+
+This guide shows **pragmatic locking options** that work in a **monolith with one database** (e.g., PostgreSQL/MySQL) and a **single Redis**. We’ll move from the simplest “**no-lock just constraints**” to **DB locks**, then **advisory locks**, and finally **Redis-based locks**—including failure modes and testing.
+
+---
+
+## First Line of Defense: Let the Database Say “No”
+
+Before adding any distributed lock, start with **data constraints**:
+- **Unique constraints** (e.g., `payments(idempotency_key)`)
+- **Foreign keys** and **check constraints**
+- **Idempotency keys** for side-effectful endpoints
+
+Example (PostgreSQL):
+```sql
+ALTER TABLE payments ADD CONSTRAINT uniq_idem UNIQUE (idempotency_key);
+```
+
+**Why this works:** even if two app instances attempt the same insert at the same time, one will fail with a unique violation. Handle that error and return the previously created resource. This is often **enough** for “create once” semantics.
+
+**When constraints aren’t enough:** updates that must be serialized (“deduct X from balance only once”), or multi-step sequences that need exclusivity.
+
+---
+
+## Row-Level Locks: `SELECT ... FOR UPDATE [SKIP LOCKED]`
+
+Use when multiple workers might process the same *row-based* job. Pattern:
+1. Put “processable” items in a DB table: `jobs(id, status, run_at, ...)`
+2. Workers **atomically** select and lock the next job:
+```sql
+BEGIN;
+WITH cte AS (
+  SELECT id FROM jobs
+  WHERE status = 'queued' AND run_at <= now()
+  ORDER BY run_at
+  FOR UPDATE SKIP LOCKED
+  LIMIT 1
+)
+UPDATE jobs j
+SET status = 'running', started_at = now()
+FROM cte
+WHERE j.id = cte.id
+RETURNING j.id;
+COMMIT;
+```
+
+- `FOR UPDATE SKIP LOCKED` ensures two workers don’t pick the same row.
+- If a worker crashes mid-run, use a watchdog to **requeue** timed-out jobs.
+
+**Great for:** job queues inside the DB, processing invoices, thumbnail generation.  
+**Not for:** cross-row operations where you need a **global mutex**.
+
+---
+
+## Postgres Advisory Locks: Application-Defined Mutexes
+
+Advisory locks are **lightweight, application-level locks** keyed by an integer or bigint. They do not lock rows or tables, and they’re released on session end.
+
+**Example use-cases in a monolith:**
+- Ensure a **user account** is processed by only one worker at a time.
+- Enforce per-entity serialization (e.g., `entity_id`-scoped operations).
+
+**Example (psql):**
+```sql
+-- Take exclusive lock by key (blocks until available)
+SELECT pg_advisory_lock(1287654321);
+
+-- Do critical section here...
+
+-- Release
+SELECT pg_advisory_unlock(1287654321);
+```
+Or the non-blocking version:
+```sql
+SELECT pg_try_advisory_lock(1287654321);
+-- returns true/false
+```
+
+**Pros**
+- No schema changes, very fast.
+- Scopes concurrency to **your** chosen identifier.
+
+**Cons & pitfalls**
+- If your app process dies without releasing the lock, Postgres will release it when the **session** closes—good, but be mindful of **long-lived connections**.
+- Requires consistent hashing of your lock key (e.g., stable 64-bit hash of a string key).
+
+---
+
+## Redis Locks (SET NX PX): When You Need a Cross-Process Mutex
+
+If you’re running multiple app instances and want a **process-external** lock, Redis is handy.
+
+**Canonical pattern:**
+```
+SET key value NX PX 30000
+```
+- `NX` → only set if not exists (acquire)
+- `PX 30000` → TTL of 30 seconds (auto-release if owner dies)
+- `value` should be a **random token**; store it so only the creator can release
+
+**Safe unlock (Lua script):** only delete if value matches (avoid deleting someone else’s lock after TTL race).
+```lua
+if redis.call("GET", KEYS[1]) == ARGV[1] then
+  return redis.call("DEL", KEYS[1])
+else
+  return 0
+end
+```
+
+**When to prefer Redis over DB locks**
+- You want a lock that isn’t tied to a DB connection
+- You already rely on Redis for queues/caches
+- You need **short, coarse-grained** critical sections across processes
+
+**Note on RedLock:** The multi-node RedLock algorithm aims to be resilient to node failures, but it’s debated. In a monolith with a **single highly available Redis** (or managed Redis with failover), the **single-instance lock with TTL + safe unlock** is typically sufficient.
+
+---
+
+## Choosing Among Options (Decision Tree)
+
+1. Can a **unique constraint** or **idempotency key** guarantee correctness? → **Use it**.  
+2. Is work naturally **row-scoped**? → Use **`FOR UPDATE SKIP LOCKED`**.  
+3. Need per-entity serialization not tied to a row? → Use **advisory locks**.  
+4. Need a **process-external** lock or non-Postgres DB? → Use **Redis lock**.
+
+---
+
+## Failure Modes & How to Test Them
+
+- **Process dies holding the lock**  
+  - *DB row lock*: released at TX end; ensure short transactions.  
+  - *Advisory lock*: released when connection closes; avoid pooled long holds.  
+  - *Redis*: rely on TTL; set TTL << expected critical section + jitter.
+
+- **Clock skew / long GC pauses**  
+  - Keep TTL conservative; renew if the section is long (heartbeats).
+
+- **Thundering herd**  
+  - Combine lock with **request coalescing**: only one worker builds a resource while others wait/poll for the result.
+
+**Testing checklist**
+- Simulate two workers grabbing the same job. Ensure only one proceeds.  
+- Kill the worker mid-critical-section. Confirm lock is eventually released.  
+- Add latency to DB/Redis and verify no deadlocks/starvation.  
+- Load-test: high QPS of lock attempts; monitor contention rate.
+
+---
+
+## Observability
+
+Track metrics:
+- Lock acquisition latency
+- Contention rate (failed `pg_try_advisory_lock`, Redis NX misses)
+- Time spent in critical sections
+- Timeouts/TTL expirations
+
+Log on every **failed acquisition** and **forced unlock**. Alert on unusual spikes.
+
+---
+
+## Practical Example: Prevent Double Inventory Deduction (Monolith + Postgres)
+
+Goal: when multiple purchase requests for the same `product_id` arrive, **serialize** deduction.
+
+Using advisory locks:
+```sql
+-- Pseudocode (transaction per request)
+SELECT pg_advisory_lock(hashtext('inventory:' || product_id::text));
+
+UPDATE products
+SET stock = stock - 1
+WHERE id = :product_id AND stock > 0;
+
+-- Check rowcount to ensure stock was available
+-- Commit txn
+
+SELECT pg_advisory_unlock(hashtext('inventory:' || product_id::text));
+```
+
+This keeps the change **atomic** and **serialized per product** without schema changes.
+
+---
+
+## Takeaways
+
+- Prefer **constraints and idempotency** before adding locks.
+- For DB-backed queues, use **row locks with SKIP LOCKED**.
+- For per-entity serialization, **advisory locks** in Postgres are excellent.
+- For cross-process mutexes, a **Redis lock with TTL + safe unlock** is pragmatic.
+- Always **measure contention** and plan recovery for crashes/timeouts.
+

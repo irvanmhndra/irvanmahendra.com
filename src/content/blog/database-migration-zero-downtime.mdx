@@ -1,0 +1,88 @@
+---
+title: "Zero-Downtime Database Migrations: A Practical Guide"
+excerpt: "Learn strategies to migrate your database schema safely without taking production offline."
+publishedAt: 2024-02-06
+readingTime: 2
+tags: ["database", "devops", "engineering"]
+---
+
+## Introduction
+
+For modern SaaS and e-commerce systems, uptime is critical. However, databases evolve: new columns, data type changes, or table splits are common. A naive migration can lock tables and cause **downtime**, directly impacting users.
+
+This article explains **zero-downtime migration strategies** so you can evolve your schema safely.
+
+---
+
+## The Problem with Traditional Migrations
+
+Imagine you change a column type:
+
+```sql
+ALTER TABLE subscriptions
+MODIFY COLUMN quota INT TO DECIMAL(10,2);
+```
+
+In production, this may lock the table, block writes, and crash your app.
+
+---
+
+## Zero-Downtime Migration Strategy
+
+A safe migration usually follows **Expand → Migrate → Contract**.
+
+### 1. Expand (Additions Are Safe)
+- Add new column without dropping old ones.  
+- Example: Add `balance` column while keeping `quota`.
+
+```sql
+ALTER TABLE subscriptions ADD COLUMN balance DECIMAL(10,2) NULL;
+```
+
+### 2. Migrate (Copy Data Gradually)
+- Backfill data with a background job.  
+- Keep writing to both old and new columns during transition.
+
+```sql
+UPDATE subscriptions SET balance = quota * 1.00 WHERE balance IS NULL;
+```
+
+### 3. Contract (Remove Old Columns)
+- Once all traffic uses the new column, safely remove the old one.
+
+```sql
+ALTER TABLE subscriptions DROP COLUMN quota;
+```
+
+---
+
+## Common Migration Patterns
+
+- **Column rename** → Add new column, migrate, drop old.  
+- **Data type change** → Duplicate column, convert gradually.  
+- **Table split** → Create new table, dual-write, then cut over.  
+- **Enum changes** → Replace with lookup table for flexibility.
+
+---
+
+## Tools and Automation
+
+- **Rails**: `strong_migrations` gem.  
+- **Go**: `golang-migrate`.  
+- **Online schema change tools**: pt-online-schema-change, gh-ost.
+
+---
+
+## Best Practices
+
+- Always test migrations in **staging with production-like data**.  
+- Monitor **query performance** during rollout.  
+- Use **feature toggles** to switch between old and new schema.  
+- Keep migrations **small and reversible**.
+
+---
+
+## Conclusion
+
+Zero-downtime migrations protect user experience while allowing your system to evolve. By following **expand → migrate → contract**, using automation tools, and combining with feature toggles, you can migrate safely without fear of production outages.
+

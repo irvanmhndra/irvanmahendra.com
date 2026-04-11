@@ -1,0 +1,190 @@
+---
+title: "Database Indexing Strategies: From EXPLAIN to Index-Only Scans (PostgreSQL focus)"
+excerpt: "A hands-on methodology to design, validate, and maintain high-impact indexes in a single-app stack."
+publishedAt: 2023-11-01
+readingTime: 4
+tags: ["database", "postgresql", "performance"]
+---
+
+## Mindset
+
+Indexes are **performance features**, not decorations. Every index speeds up **some** reads but *taxes all writes* (and storage). The goal is to maximize **read performance** for your real queries while keeping write overhead acceptable.
+
+This guide assumes a monolith with PostgreSQL, but many principles apply elsewhere.
+
+---
+
+## Step 1 — Capture Reality with `pg_stat_statements`
+
+Enable the extension and observe the **top N slowest** and **most frequent** queries. Optimize for **actual workload**, not imagined queries.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+SELECT query, calls, mean_exec_time, rows
+FROM pg_stat_statements
+ORDER BY mean_exec_time DESC
+LIMIT 20;
+```
+
+---
+
+## Step 2 — Build a Mental Model of Access Paths
+
+Postgres uses:
+- **Seq Scan**: reads the whole table
+- **Index Scan**: uses an index, then fetches table rows
+- **Index Only Scan**: serves entirely from index (if visibility map allows)
+- **Bitmap Index Scan**: builds a bitmap of matching rows, then fetches
+
+Use `EXPLAIN (ANALYZE, BUFFERS)` to verify actual plan and IO.
+
+---
+
+## Step 3 — Choose Index Types Wisely
+
+- **B-tree**: default; equality/range on scalar types.  
+- **GIN**: full-text search, JSONB containment.  
+- **GiST**: geometric ranges, trigrams.  
+- **BRIN**: very large, naturally ordered tables (e.g., time).  
+- **Hash**: equality only; rarely needed with modern B-tree.
+
+---
+
+## Step 4 — Composite Indexes and Column Order
+
+The **left-most prefix rule** matters. For an index `(user_id, created_at)`:
+- Filters on `user_id` alone or `user_id + created_at` are great.
+- A query on `created_at` **only** won’t use this index efficiently.
+
+**Heuristic:** order columns by **selectivity** (most selective first) for pure filters; if you sort by time often, consider `(user_id, created_at DESC)`.
+
+---
+
+## Step 5 — Covering & Partial Indexes
+
+**Covering (INCLUDE)** — let index serve queries without touching table:
+```sql
+CREATE INDEX idx_orders_user_date_inc
+ON orders(user_id, created_at)
+INCLUDE (total_price, status);
+```
+
+**Partial** — index only the hot subset:
+```sql
+CREATE INDEX idx_active_orders
+ON orders(user_id, created_at)
+WHERE status IN ('pending','paid');
+```
+
+These reduce size and improve cache residency.
+
+---
+
+## Step 6 — Functional & Expression Indexes
+
+If you filter on a function, index **the expression**:
+```sql
+CREATE INDEX idx_users_email_lower ON users (lower(email));
+-- Now WHERE lower(email) = lower($1) uses the index
+```
+
+For JSONB:
+```sql
+CREATE INDEX idx_events_props ON events USING GIN ((props -> 'category'));
+```
+
+---
+
+## Step 7 — BRIN for Append-Only Giants
+
+If you have massive append-only tables (logs, events):
+```sql
+CREATE INDEX idx_events_brin ON events USING BRIN (created_at);
+```
+BRIN is tiny and fast for range scans when **created_at** correlates with physical order.
+
+---
+
+## Step 8 — Validate with `EXPLAIN (ANALYZE, BUFFERS)`
+
+Example before/after:
+```sql
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT * FROM orders
+WHERE user_id = 42 AND created_at >= now() - interval '30 days'
+ORDER BY created_at DESC
+LIMIT 50;
+```
+Expect switch from `Seq Scan` to `Index Scan`/`Index Only Scan`, big drop in shared reads.
+
+---
+
+## Step 9 — Avoid Anti-Patterns
+
+- **Wildcards at the left** in `LIKE '%foo'` (use trigram or full-text).  
+- **Functions on the column** without expression indexes.  
+- **Over-indexing**: duplicated/overlapping indexes (e.g., both `(a)` and `(a,b)`).  
+- **Timestamps stored as text**—prevent range scans.  
+- **Low-cardinality columns** (e.g., boolean) rarely need standalone indexes.
+
+---
+
+## Step 10 — Maintenance & Bloat Control
+
+- Monitor `pg_stat_user_indexes` for **idx_scan** (usage) and size. Drop unused.  
+- Rebuild bloated indexes during low traffic:
+```sql
+REINDEX INDEX CONCURRENTLY idx_name;
+```
+- Keep autovacuum aggressive on hot tables; consider `fillfactor` for heavy-update tables.
+- Use `pg_repack` if needed to reclaim space online.
+
+---
+
+## A Monolith Case Study: Order History
+
+**Queries to speed up**
+- Recent orders per user (filters + sort by time)  
+- Lookups by order number  
+- Reporting by month
+
+**Proposed indexes**
+```sql
+-- Login/account pages
+CREATE INDEX idx_users_email_lower ON users (lower(email));
+
+-- Per-user history
+CREATE INDEX idx_orders_user_date ON orders (user_id, created_at DESC)
+INCLUDE (status, total_price);
+
+-- Exact lookup
+CREATE UNIQUE INDEX idx_orders_code ON orders (order_code);
+
+-- Reporting scans (very large table)
+CREATE INDEX idx_orders_brin ON orders USING BRIN (created_at);
+```
+
+**Results you want**
+- Fast index-only scans for user history
+- Minimal table heap access for hot queries
+- Short, small BRIN for analytics ranges
+
+---
+
+## Checklist Before Adding Any Index
+
+- [ ] Does a real, slow query benefit? (from `pg_stat_statements`)  
+- [ ] Do we understand predicates and sort order?  
+- [ ] Is column selectivity high enough?  
+- [ ] Are we duplicating an existing composite index?  
+- [ ] Do we have a rollback if writes slow down?
+
+---
+
+## Takeaways
+
+- Let **workload** drive indexing.  
+- Prefer **composite, partial, and covering** indexes targeted to real queries.  
+- Use **BRIN** for giant, append-only tables.  
+- Measure with **EXPLAIN/ANALYZE** and keep indexes tidy over time.
+

@@ -1,0 +1,162 @@
+---
+title: "Partitioning & Sharding: From One Big Table to Scalable Storage"
+excerpt: "A practical, staged playbook to introduce PostgreSQL partitioning (and later sharding) without rewriting your app."
+publishedAt: 2024-04-27
+readingTime: 4
+tags: ["database", "postgresql", "scalability"]
+---
+
+## Premise
+
+You run a **single web app** (monolith) with **PostgreSQL**. One table (e.g., `events`, `orders`, `logs`) now has **hundreds of millions** of rows. Queries slow down, autovacuum struggles, and nightly maintenance hurts.
+
+This guide shows how to **introduce native Postgres partitioning** first, and only consider **sharding** later—using an **expand → migrate → contract** approach that is safe and iterative.
+
+---
+
+## Partitioning vs Sharding
+
+- **Partitioning** splits **one logical table into many child tables** managed by Postgres. Queries still use the same table name; the planner prunes partitions automatically. *Start here.*
+- **Sharding** splits data across **multiple physical databases** (instances). It’s powerful but introduces cross-DB complexities (routing, fan-out, backups). *Use only if partitioning isn’t enough.*
+
+---
+
+## Choosing a Partition Key
+
+Pick a key that supports **pruning** (most queries filter by it) and avoids hot partitions.
+
+Common choices:
+- **Time-based** (`created_at`): great for append-only data (`events`, `logs`, `orders`).  
+- **Entity-based** (`tenant_id`, `user_id`): good for multi-tenant apps with per-tenant access patterns.
+
+For a monolith, **time-based** is often the safest first step.
+
+---
+
+## Step-by-Step: Convert `orders` to Time-Range Partitions
+
+### Phase 0 — Prepare
+- Ensure the table has the necessary **indexes** on typical filters (`created_at`, `user_id`).
+- Freeze schema changes during migration windows.
+
+### Phase 1 — Create Partitioned Table
+```sql
+BEGIN;
+ALTER TABLE orders RENAME TO orders_legacy;
+
+CREATE TABLE orders (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  total NUMERIC(12,2) NOT NULL,
+  status TEXT NOT NULL
+) PARTITION BY RANGE (created_at);
+
+-- Create first partitions (monthly)
+CREATE TABLE orders_2025_07 PARTITION OF orders
+  FOR VALUES FROM ('2025-07-01') TO ('2025-08-01');
+CREATE TABLE orders_2025_08 PARTITION OF orders
+  FOR VALUES FROM ('2025-08-01') TO ('2025-09-01');
+CREATE TABLE orders_2025_09 PARTITION OF orders
+  FOR VALUES FROM ('2025-09-01') TO ('2025-10-01');
+
+-- Default partition to catch stragglers (optional)
+CREATE TABLE orders_default PARTITION OF orders DEFAULT;
+
+COMMIT;
+```
+
+### Phase 2 — Copy Data in Batches
+```sql
+INSERT INTO orders SELECT * FROM orders_legacy
+WHERE created_at >= '2025-07-01' AND created_at < '2025-10-01';
+
+-- Remaining rows go to orders_default automatically
+INSERT INTO orders SELECT * FROM orders_legacy
+WHERE created_at < '2025-07-01' OR created_at >= '2025-10-01';
+```
+
+Use an app-side or SQL-side **batcher** (e.g., 10k rows per batch) to avoid big locks. Consider **`COPY`** for speed.
+
+### Phase 3 — Rebuild Indexes per Partition
+Indexes live **per partition**. Create them only where needed:
+```sql
+CREATE INDEX ON orders_2025_09 (user_id, created_at);
+CREATE INDEX ON orders_2025_09 (status);
+-- Repeat for other partitions based on query patterns
+```
+
+### Phase 4 — Swap Reads/Writes
+- Point the application to **write** to `orders` (the partitioned table).  
+- New rows automatically flow into the correct partition.  
+- Validate with canary traffic, then switch fully.
+
+### Phase 5 — Drop Legacy
+When confident, archive or drop `orders_legacy`. Keep around for a while if you need rollback.
+
+---
+
+## Ongoing Operations
+
+- **New partitions**: pre-create ahead of time (e.g., cron to create next month).  
+- **Retention**: drop old partitions instantly instead of running `DELETE`:
+```sql
+DROP TABLE orders_2024_07;  -- fast archival
+```
+- **Vacuum/Analyze**: per-partition; faster and more predictable.  
+- **Backups**: validate that all partitions are included in your strategy.
+
+---
+
+## Query Patterns & Pitfalls
+
+- Ensure queries include `created_at` ranges for **partition pruning**.  
+- Aggregations spanning many months may hit multiple partitions—consider **rollup tables** for dashboards.  
+- Avoid **foreign keys** referencing a partitioned table from many other tables when possible; watch for lock amplification during DDL.
+
+---
+
+## When to Consider Sharding
+
+Partitioning improved performance but you still hit limits (IOPS, vertical scaling). Consider **sharding** the hottest table(s) by **hash of tenant/user** or by **geography**.
+
+**Minimal sharding for a monolith:**
+- Keep one app.
+- Add a simple **routing layer** (library/config) that maps a tenant to a DSN.
+- Store the routing map in a **config table** (or Consul/etcd if you already use one).
+
+**Caveats**
+- Cross-shard joins become app-level fan-outs.  
+- Migrations must run per shard.  
+- Backups/DR multiply.
+
+Adopt sharding **only** for the specific tables/tenants that demand it.
+
+---
+
+## Observability & SLOs
+
+Track:
+- Partition scan vs pruned scan counts
+- Per-partition bloat and indexes size
+- Query latency by partition month/tenant
+- Errors in partition rotation jobs
+
+Set SLOs (e.g., 95% of order lookups < 50 ms) and monitor after migration.
+
+---
+
+## Rollback Plan
+
+- Keep `orders_legacy` read-only for a period.  
+- A simple rollback is to point writes back to `orders_legacy` and replay missed rows.  
+- Keep dual-write toggles only temporarily and remove once stable.
+
+---
+
+## Takeaways
+
+- Start with **time-based partitioning**—it’s the lowest-risk, highest-impact move for large tables in a monolith.
+- Build **automation** to create/rotate/drop partitions.
+- Only **consider sharding** when partitioning plus vertical scaling can’t meet your SLOs.
+
