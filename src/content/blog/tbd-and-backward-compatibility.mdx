@@ -1,0 +1,260 @@
+---
+title: "Trunk-Based Development (TBD) in SaaS: Backward Compatibility, Gradual Rollout, and a Real Migration Case Study"
+excerpt: "A comprehensive, sequential guide to Trunk-Based Development (TBD) with SaaS-focused examples (HRIS & e-sign), backward compatibility patterns, gradual rollout playbooks, and an INT→DECIMAL subscription migration case study."
+publishedAt: 2024-09-17
+readingTime: 6
+tags: ["devops", "saas", "engineering"]
+---
+
+# Trunk-Based Development (TBD) with Backward Compatibility and Gradual Rollout in SaaS
+
+## 1) Introduction
+
+Imagine this:
+You’re about to release a big feature. Everything worked fine on staging, but in production it suddenly crashes. Why? Because your branch has been sitting for 3 weeks, diverging from main. Integration hell begins — late nights, hotfixes, and angry customers.
+
+This is exactly the kind of pain Trunk-Based Development (TBD) is designed to prevent.
+
+In modern software engineering, speed and reliability are critical. Teams need to deliver features continuously, minimize integration headaches, and ensure production stability. Trunk-Based Development (TBD) has emerged as one of the most effective branching strategies for enabling continuous integration and continuous delivery (CI/CD).
+
+Unlike traditional Git Flow or long-lived feature branching, TBD emphasizes short-lived branches or even direct commits to trunk (main/master), with continuous integration happening multiple times per day. The result is faster feedback, fewer merge conflicts, and a culture of frequent releases.
+
+Traditional branching models (e.g., Git Flow) encourage **long-lived branches** and risky “big bang” merges.  
+**Trunk-Based Development (TBD)** fixes this by keeping everyone close to `main/master` and shipping in small, reversible steps.
+
+**TBD at a glance**
+
+- Short-lived branches (hours or a couple of days).
+- Frequent merges to `main/master` **worry free**.
+- Trunk is **always deployable**.
+- **Feature flags** hide in-progress work.
+- **Backward compatibility** ensures toggling OFF is safe.
+- **Gradual rollout** reduces blast radius in production.
+
+---
+
+## 2) Foundations of TBD
+
+**Core principles**
+
+- **Single trunk** (`main`/`master`) is the source of truth.
+- **Merge daily** (often multiple times a day).
+- **Continuous Integration** (build + tests on every change).
+- **Automated deployments** so trunk can ship anytime.
+- **Lightweight reviews**, strong ownership of quality.
+
+**Why SaaS needs TBD**
+
+- HRIS evolves with payroll/tax law changes (government policy).
+- e-signature products iterate on many integrations (e-meterai, invoice signing, and etc.).
+- Both domains require **speed with reliability and compliance**.
+
+---
+
+## 3) Backward Compatibility: The Backbone of Safe TBD
+
+Feature flags are not just on/off switches. They must guarantee:
+
+- **Toggle OFF** → identical behavior as before (no regressions).
+- **Toggle ON** → new logic; flipping OFF instantly restores safety.
+- With strong backward compatibility, **rollbacks are rare**.
+
+~~~ruby
+# Ruby (Flipper)
+if Flipper.enabled?(:ft_new_tax_rules, employee.id)
+  PayrollCalculatorV2.calculate(employee)
+else
+  PayrollCalculatorV1.calculate(employee)
+end
+~~~
+
+An then communication habit change is coming.
+
+**From:**
+
+> “I’ve shipped feature X adjustment to staging. If there are errors or broken flows, please ignore them.”
+
+**To:**
+
+> “Feature X adjustment is now available in production. You can enable it anytime via the `ft_xxx` toggle.”
+
+---
+
+## 4) Real SaaS Use Cases
+
+### A) Product Feature Rollout: AI Dashboard
+
+~~~jsx
+// React/TypeScript
+return featureFlags.isEnabled("ft_fe_new_dashboard")
+  ? <NewDashboard />
+  : <OldDashboard />;
+~~~
+
+---
+
+### B) Billing/Checkout Flow: New Payment Gateway
+
+~~~go
+// Go (fallback keeps backward compatibility)
+if flags.Enabled("ft_payment_gateway_v2") {
+    if err := processNewGateway(order); err != nil {
+        return processOldGateway(order) // safe fallback
+    }
+    return nil
+}
+return processOldGateway(order)
+~~~
+
+---
+
+## 5) Gradual Rollout (Canary) Playbook
+
+Stages:
+
+1. **Internal** (employees only).  
+2. **Pilot customers** (friendly tenants).  
+3. **Percent traffic**: 10% → 25% → 50% → 100%.  
+4. **Monitor** errors, latency, KPIs, audit/compliance.
+
+**E-signature example (e-stamp engine v2)**
+
+~~~go
+if featureFlags.IsEnabledFor("ft_estamp_v2", customerID) {
+    return StampEngineV2.Sign(doc)
+}
+return StampEngineV1.Sign(doc)
+~~~
+
+---
+
+## 6) Database Schema Changes with TBD (Expand & Contract)
+
+1. **Expand**: add new structures but keep old ones.  
+2. **Dual-read/write** while migrating data.  
+3. **Contract**: remove the old schema after full cutover.
+
+**Example: adding `employee_type`**
+
+~~~sql
+ALTER TABLE employees
+ADD COLUMN employee_type VARCHAR(20) DEFAULT 'full-time';
+~~~
+
+---
+
+## 7) Rollback vs Feature Flags
+
+| Approach | Failure Handling | Risk |
+|----------|------------------|------|
+| Rollback | Redeploy old build; possible state drift | High |
+| Flag OFF | Instant recovery; no redeploy             | Low  |
+
+---
+
+## 8) Case Study: Subscription Usage Migration (Quota → Balance)
+
+### Context
+
+- **Old model**: quota per period (**INT**), e.g., `1 quota/whatsapp message`.  
+- **New model**: balance credits (**DECIMAL**), e.g., `400.25/whatsapp message`. 
+- **Change**: data type must support decimals.
+
+**Initial attempt (what went wrong)**
+
+- Code had a `balance_based` toggle; first canary was **10%** of tenants.  
+- **DB column** was changed to support only the **new** model globally.  
+- 90% tenants still using **quota** logic now faced mismatched expectations.  
+- Result: data inconsistencies → **rollback** + schema revert.
+
+**Root cause:** Rollout was **gradual in code** but **global in schema** (not backward compatible).
+
+---
+
+### Safer Migration Strategy (INT → DECIMAL) with Expand & Contract
+
+#### Step 1) Expand schema (dual compatibility)
+
+~~~sql
+ALTER TABLE subscriptions
+ADD COLUMN balance_credits DECIMAL(12,2) NULL;
+
+-- Keep existing 'quota INT NOT NULL' as-is.
+~~~
+
+#### Step 2) Dual-write in the application
+
+~~~go
+// Go (pseudo)
+if featureFlags.IsEnabledFor("ft_balance_based", customerID) {
+    sub.BalanceCredits = newBalance   // write new
+} else {
+    sub.Quota = newQuota              // write old
+}
+db.Save(&sub)
+~~~
+
+#### Step 3) Background migration (idempotent)
+
+~~~sql
+-- Example mapping rule (illustrative, align with Product/Finance):
+-- 1 quota unit = 400.25 balance credit
+UPDATE subscriptions
+SET balance_credits = quota * 400.25
+WHERE balance_credits IS NULL;
+~~~
+
+#### Step 4) Dual-read (tolerant reads)
+
+~~~go
+func RemainingUsage(sub Subscription, customerID string) decimal.Decimal {
+    if featureFlags.IsEnabledFor("ft_balance_based", customerID) && sub.BalanceCredits.Valid {
+        return sub.BalanceCredits
+    }
+    // fallback to the old model
+    return decimal.NewFromInt(sub.Quota)
+}
+~~~
+
+#### Step 5) Gradual rollout (now safe)
+
+- 1% → 10% → 50% → 100% tenants.  
+- Both columns are valid; no cross-model conflicts.
+
+#### Step 6) Contract (remove old path)
+
+~~~sql
+ALTER TABLE subscriptions
+DROP COLUMN quota;
+~~~
+
+Remove old code and the feature flag.
+
+**Key lesson:** If the schema cannot be dual-compatible, **skip partial canary** and do a **100% cutover** at the switch point. Otherwise, use expand/contract so partial rollout is safe.
+
+---
+
+## 9) Best Practices Recap
+
+- Short branches, daily merges.  
+- Fast, reliable CI/CD.  
+- Write tests for **both** ON/OFF paths.  
+- Enforce **backward compatibility** for the OFF path.  
+- Use **expand & contract** for DB changes.  
+- Roll out gradually with strong observability.  
+- **Clean up** flags and legacy code after cutover.
+
+---
+
+## 10) Conclusion
+
+TBD isn’t just a branching strategy—it’s a **delivery culture**:
+
+- **Feature flags** protect users from unfinished work.  
+- **Backward compatibility** makes toggles truly safe and rollbacks rare.  
+- **Gradual rollout** limits blast radius and builds confidence.  
+- **Expand & contract** keeps schema migrations safe.
+
+With these practices, SaaS teams (HRIS, e-signature, and beyond) can ship **faster, safer, and continuously**.
+
+---
