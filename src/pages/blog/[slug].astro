@@ -34,103 +34,94 @@ function formatDate(date: Date) {
   description={post.data.excerpt}
   image={post.data.featuredImage}
 >
-  <div class="blog-post-container">
-    <header class="blog-post-header">
-      <div class="container">
-        <div class="blog-header-nav">
-          <a href="/blog" class="back-link">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-            </svg>
-            Back to Blog
-          </a>
-          <ThemeToggle />
+  <div class="medium-article-page">
+
+    <!-- Navbar -->
+    <nav class="medium-nav">
+      <a href="/blog" class="medium-nav-logo">Irvan Mahendra</a>
+      <ThemeToggle />
+    </nav>
+
+    <!-- Article -->
+    <main class="medium-article-main">
+      <article class="medium-article">
+
+        <!-- Title -->
+        <h1 class="article-title">{post.data.title}</h1>
+
+        <!-- Subtitle / excerpt -->
+        {post.data.excerpt && (
+          <p class="article-subtitle">{post.data.excerpt}</p>
+        )}
+
+        <!-- Author row -->
+        <div class="article-author-row">
+          <img src="/avatar.png" alt="Irvan" class="article-author-avatar" />
+          <div class="article-author-info">
+            <span class="article-author-name">Irvan Eksa Mahendra</span>
+            <div class="article-author-meta">
+              <span>{formatDate(post.data.publishedAt)}</span>
+              <span class="feed-dot">·</span>
+              <span>{post.data.readingTime} min read</span>
+            </div>
+          </div>
         </div>
 
+        <!-- Tags -->
+        {post.data.tags.length > 0 && (
+          <div class="article-tags">
+            {post.data.tags.map((tag) => (
+              <span class="article-tag">{tag}</span>
+            ))}
+          </div>
+        )}
+
+        <hr class="article-divider" />
+
+        <!-- Featured image -->
         {post.data.featuredImage && (
-          <div class="post-featured-image">
-            <img src={post.data.featuredImage} alt={post.data.title} />
-          </div>
+          <img
+            src={post.data.featuredImage}
+            alt={post.data.title}
+            class="article-featured-image"
+          />
         )}
 
-        <div class="post-header-content">
-          <h1 class="post-title">{post.data.title}</h1>
-          <div class="post-meta">
-            <span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-              {formatDate(post.data.publishedAt)}
-            </span>
-            <span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-              </svg>
-              {post.data.readingTime} min read
-            </span>
-          </div>
-          {post.data.tags.length > 0 && (
-            <div class="post-tags">
-              {post.data.tags.map((tag) => (
-                <span class="tag">{tag}</span>
-              ))}
-            </div>
-          )}
+        <!-- Body -->
+        <div class="medium-prose">
+          <Content />
         </div>
-      </div>
-    </header>
 
-    <main class="blog-post-main">
-      <div class="container">
-        <article class="post-content">
-          <div class="prose prose-lg max-w-none">
-            <Content />
-          </div>
-        </article>
+      </article>
 
-        {suggestedPosts.length > 0 && (
-          <section class="suggested-articles">
-            <h2>Continue Reading</h2>
-            <div class="suggested-articles-grid">
-              {suggestedPosts.map((suggestedPost) => (
-                <article class="suggested-post-card">
-                  {suggestedPost.data.featuredImage && (
-                    <div class="suggested-post-image">
-                      <img src={suggestedPost.data.featuredImage} alt={suggestedPost.data.title} />
-                    </div>
-                  )}
-                  <div class="suggested-post-content">
-                    <div class="suggested-post-meta">
-                      <span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                        {formatDate(suggestedPost.data.publishedAt)}
-                      </span>
-                      <span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                        </svg>
-                        {suggestedPost.data.readingTime} min read
-                      </span>
-                    </div>
-                    <h3 class="suggested-post-title">
-                      <a href={`/blog/${suggestedPost.slug}`}>{suggestedPost.data.title}</a>
-                    </h3>
-                    <p class="suggested-post-excerpt">{suggestedPost.data.excerpt}</p>
-                    <a href={`/blog/${suggestedPost.slug}`} class="suggested-read-more">
-                      Read more
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                      </svg>
-                    </a>
-                  </div>
-                </article>
-              ))}
+      <!-- More from -->
+      {suggestedPosts.length > 0 && (
+        <section class="more-from">
+          <div class="more-from-header">
+            <img src="/avatar.png" alt="Irvan" class="more-from-avatar" />
+            <div>
+              <p class="more-from-label">More from</p>
+              <p class="more-from-author">Irvan Eksa Mahendra</p>
             </div>
-          </section>
-        )}
-      </div>
+          </div>
+          <div class="more-from-grid">
+            {suggestedPosts.map((p) => (
+              <a href={`/blog/${p.slug}`} class="more-from-card">
+                <div class="more-from-card-meta">
+                  {formatDate(p.data.publishedAt)}
+                  <span class="feed-dot">·</span>
+                  {p.data.readingTime} min read
+                </div>
+                <h3 class="more-from-card-title">{p.data.title}</h3>
+                {p.data.excerpt && (
+                  <p class="more-from-card-excerpt">{p.data.excerpt}</p>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
     </main>
   </div>
 </Layout>

@@ -11,7 +11,7 @@ const sortedPosts = posts.sort(
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
   })
 }
@@ -21,72 +21,52 @@ function formatDate(date: Date) {
   title="Blog - Irvan Eksa Mahendra"
   description="Personal thoughts on self-development and reflection, sometimes about tech."
 >
-  <div class="blog-container">
-    <header class="blog-header">
-      <div class="container">
-        <div class="blog-header-nav">
-          <a href="/" class="back-link">← Back to Home</a>
-          <ThemeToggle />
-        </div>
-        <h1>Irvan's Blog</h1>
-        <p>Personal thoughts on self-development and reflection, sometimes about tech.</p>
-      </div>
-    </header>
+  <div class="medium-blog">
 
-    <main class="blog-main">
-      <div class="container">
-        {sortedPosts.length > 0 ? (
-          <div class="posts-grid">
-            {sortedPosts.map((post) => (
-              <article class="post-card">
-                {post.data.featuredImage && (
-                  <div class="post-image">
-                    <img src={post.data.featuredImage} alt={post.data.title} />
-                  </div>
-                )}
-                <div class="post-content">
-                  <div class="post-meta">
-                    <span>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-                      </svg>
-                      {formatDate(post.data.publishedAt)}
-                    </span>
-                    <span>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                      </svg>
-                      {post.data.readingTime} min read
-                    </span>
-                  </div>
-                  <h2 class="post-title">
-                    <a href={`/blog/${post.slug}`}>{post.data.title}</a>
-                  </h2>
-                  <p class="post-excerpt">{post.data.excerpt}</p>
-                  {post.data.tags.length > 0 && (
-                    <div class="post-tags">
-                      {post.data.tags.map((tag) => (
-                        <span class="tag">{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                  <a href={`/blog/${post.slug}`} class="read-more">
-                    Read more
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-                    </svg>
-                  </a>
-                </div>
-              </article>
-            ))}
+    <!-- Navbar -->
+    <nav class="medium-nav">
+      <a href="/" class="medium-nav-logo">Irvan Mahendra</a>
+      <ThemeToggle />
+    </nav>
+
+    <!-- Feed header -->
+    <div class="medium-feed-header">
+      <h1>Writing</h1>
+      <p>Personal thoughts on self-development and reflection, sometimes about tech.</p>
+    </div>
+
+    <!-- Post feed -->
+    <main class="medium-feed">
+      {sortedPosts.map((post) => (
+        <a href={`/blog/${post.slug}`} class="feed-item">
+          <div class="feed-item-body">
+            <div class="feed-item-author">
+              <img src="/avatar.png" alt="Irvan" class="feed-author-avatar" />
+              <span>Irvan Mahendra</span>
+              <span class="feed-dot">·</span>
+              <span>{formatDate(post.data.publishedAt)}</span>
+            </div>
+            <h2 class="feed-item-title">{post.data.title}</h2>
+            {post.data.excerpt && (
+              <p class="feed-item-excerpt">{post.data.excerpt}</p>
+            )}
+            <div class="feed-item-footer">
+              <span class="feed-reading-time">{post.data.readingTime} min read</span>
+              {post.data.tags.slice(0, 2).map((tag) => (
+                <span class="feed-tag">{tag}</span>
+              ))}
+            </div>
           </div>
-        ) : (
-          <div class="empty-state">
-            <h2>No posts yet</h2>
-            <p>Blog posts will appear here once they're published.</p>
-          </div>
-        )}
-      </div>
+          {post.data.featuredImage && (
+            <img
+              src={post.data.featuredImage}
+              alt={post.data.title}
+              class="feed-item-thumbnail"
+            />
+          )}
+        </a>
+      ))}
     </main>
+
   </div>
 </Layout>
