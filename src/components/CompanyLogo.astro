@@ -22,8 +22,8 @@ const initials = company
   .toUpperCase()
   .substring(0, 2)
 
-const logoStyle = `width:${size}px;height:${size}px;border-radius:8px;object-fit:contain;background-color:white;padding:6px;border:1px solid var(--border-color);box-shadow:0 2px 4px rgba(0,0,0,0.1);`
-const initialsStyle = `width:${size}px;height:${size}px;border-radius:8px;background-color:var(--bg-secondary);border:1px solid var(--border-color);box-shadow:0 2px 4px rgba(0,0,0,0.1);align-items:center;justify-content:center;font-size:16px;font-weight:bold;color:var(--text-primary);`
+const logoStyle = `width:${size}px;height:${size}px;`
+const initialsStyle = `width:${size}px;height:${size}px;`
 ---
 
 <div class="company-logo">
@@ -32,12 +32,13 @@ const initialsStyle = `width:${size}px;height:${size}px;border-radius:8px;backgr
       <img
         src={logoUrl}
         alt={`${company} logo`}
+        class="company-logo-img"
         style={logoStyle}
-        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+        onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden');this.nextElementSibling.classList.add('flex');"
       />
-      <div style={`display:none;${initialsStyle}`}>{initials}</div>
+      <div class="company-logo-initials hidden" style={initialsStyle}>{initials}</div>
     </>
   ) : (
-    <div style={`display:flex;${initialsStyle}`}>{initials}</div>
+    <div class="company-logo-initials flex" style={initialsStyle}>{initials}</div>
   )}
 </div>

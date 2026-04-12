@@ -45,10 +45,11 @@ const ogImage = image.startsWith('http') ? image : `${siteUrl}${image}`
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
-    <!-- Prevent FOUC: apply theme before first paint -->
+    <!-- Prevent FOUC: apply theme before first paint, respecting OS preference -->
     <script is:inline>
       ;(function () {
-        const theme = localStorage.getItem('theme') || 'light'
+        const stored = localStorage.getItem('theme')
+        const theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
         document.documentElement.setAttribute('data-theme', theme)
       })()
     </script>
