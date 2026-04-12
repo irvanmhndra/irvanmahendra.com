@@ -16,3 +16,7 @@ node_modules/
 # IDE
 .idea/
 .vscode/
+
+# Local assets not part of the site
+blog-cms-backup/
+KLG_Align-Left-Logo-Black.jpg
