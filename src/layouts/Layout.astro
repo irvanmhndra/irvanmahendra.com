@@ -12,6 +12,10 @@ const {
   description = 'Passionate software engineer specializing in Go, Ruby on Rails, and scalable backend systems. Currently developing MekariSign at Mekari.',
   image = '/avatar.png',
 } = Astro.props
+
+const siteUrl = 'https://irvanmahendra.com'
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString()
+const ogImage = image.startsWith('http') ? image : `${siteUrl}${image}`
 ---
 
 <!doctype html>
@@ -21,18 +25,26 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/png" href="/avatar.png" />
     <link rel="apple-touch-icon" href="/avatar.png" />
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" type="application/rss+xml" title="Irvan Mahendra's Blog" href="/rss.xml" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="author" content="Irvan Eksa Mahendra" />
     <meta name="keywords" content="software engineer, golang, ruby on rails, backend developer, mekari, digital signature" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:site_name" content="Irvan Mahendra" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://irvanmahendra.com" />
-    <meta property="og:image" content={image} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@irvanmahendra" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={image} />
+    <meta name="twitter:image" content={ogImage} />
     <!-- Prevent FOUC: apply theme before first paint -->
     <script is:inline>
       ;(function () {

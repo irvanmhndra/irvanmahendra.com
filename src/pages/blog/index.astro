@@ -1,7 +1,9 @@
 ---
 import { getCollection } from 'astro:content'
+import { Image } from 'astro:assets'
 import Layout from '../../layouts/Layout.astro'
 import ThemeToggle from '../../components/ThemeToggle.astro'
+import avatar from '../../assets/avatar.png'
 
 const posts = await getCollection('blog')
 const sortedPosts = posts.sort(
@@ -41,7 +43,7 @@ function formatDate(date: Date) {
         <a href={`/blog/${post.slug}`} class="feed-item">
           <div class="feed-item-body">
             <div class="feed-item-author">
-              <img src="/avatar.png" alt="Irvan" class="feed-author-avatar" />
+              <Image src={avatar} alt="Irvan" width={20} height={20} class="feed-author-avatar" loading="eager" />
               <span>Irvan Mahendra</span>
               <span class="feed-dot">·</span>
               <span>{formatDate(post.data.publishedAt)}</span>
