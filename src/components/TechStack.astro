@@ -16,6 +16,8 @@ import {
   siAmazonwebservices,
 } from 'simple-icons/icons'
 
+// Icons whose brand color is very light (near-white) or very dark — needs adaptive handling
+// We store the hex and handle contrast in CSS
 const technologies = [
   { name: 'Ruby', icon: siRuby },
   { name: 'Ruby on Rails', icon: siRubyonrails },
@@ -32,6 +34,21 @@ const technologies = [
   { name: 'Git', icon: siGit },
   { name: 'AWS', icon: siAmazonwebservices },
 ]
+
+// Determine if a hex color is light (luminance > 0.5)
+function isLight(hex: string): boolean {
+  const r = parseInt(hex.slice(0, 2), 16) / 255
+  const g = parseInt(hex.slice(2, 4), 16) / 255
+  const b = parseInt(hex.slice(4, 6), 16) / 255
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6
+}
+
+function isDark(hex: string): boolean {
+  const r = parseInt(hex.slice(0, 2), 16) / 255
+  const g = parseInt(hex.slice(2, 4), 16) / 255
+  const b = parseInt(hex.slice(4, 6), 16) / 255
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.15
+}
 ---
 
 <section id="tech-stack" class="section">
@@ -45,8 +62,8 @@ const technologies = [
             viewBox="0 0 24 24"
             width="40"
             height="40"
-            style={`fill: #${tech.icon.hex}`}
-            class="tech-icon"
+            class={`tech-icon ${isLight(tech.icon.hex) ? 'tech-icon--light-brand' : ''} ${isDark(tech.icon.hex) ? 'tech-icon--dark-brand' : ''}`}
+            style={`--brand-color: #${tech.icon.hex}`}
             aria-label={tech.name}
           >
             <path d={tech.icon.path} />

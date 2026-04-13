@@ -51,8 +51,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -132,6 +131,42 @@ body {
   width: 100%;
 }
 
+/* 404 page */
+.not-found-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+}
+
+.not-found-content {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.not-found-heading {
+  font-size: 8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.not-found-title {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.not-found-desc {
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+}
+
 .theme-toggle {
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
@@ -140,11 +175,28 @@ body {
   cursor: pointer;
   transition: var(--transition);
   color: var(--text-primary);
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .theme-toggle:hover {
   background: var(--bg-tertiary);
   transform: translateY(-1px);
+}
+
+.toggle-icon {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.toggle-icon--hidden {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
 }
 
 .hero-content {
@@ -326,7 +378,24 @@ body {
 
 .tech-icon {
   margin-bottom: 10px;
+  fill: var(--brand-color);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Icons with very light brand colors: show brand color in dark mode, use text color in light mode */
+:root .tech-icon--light-brand {
+  fill: var(--text-secondary);
+}
+[data-theme="dark"] .tech-icon--light-brand {
+  fill: var(--brand-color);
+}
+
+/* Icons with very dark brand colors: show brand color in light mode, use text color in dark mode */
+:root .tech-icon--dark-brand {
+  fill: var(--brand-color);
+}
+[data-theme="dark"] .tech-icon--dark-brand {
+  fill: var(--text-secondary);
 }
 
 .tech-name {
@@ -582,6 +651,12 @@ body {
   max-width: 692px;
   margin: 0 auto;
   padding: 0 24px;
+}
+
+.feed-empty {
+  padding: 64px 0;
+  text-align: center;
+  color: var(--text-muted);
 }
 
 .feed-item {

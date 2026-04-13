@@ -39,6 +39,11 @@ function formatDate(date: Date) {
 
     <!-- Post feed -->
     <main class="medium-feed">
+      {sortedPosts.length === 0 && (
+        <div class="feed-empty">
+          <p>No posts yet. Check back soon.</p>
+        </div>
+      )}
       {sortedPosts.map((post) => (
         <a href={`/blog/${post.slug}`} class="feed-item">
           <div class="feed-item-body">
