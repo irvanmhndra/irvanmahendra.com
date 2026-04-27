@@ -187,4 +187,3 @@ CREATE INDEX idx_orders_brin ON orders USING BRIN (created_at);
 - Prefer **composite, partial, and covering** indexes targeted to real queries.  
 - Use **BRIN** for giant, append-only tables.  
 - Measure with **EXPLAIN/ANALYZE** and keep indexes tidy over time.
-

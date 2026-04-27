@@ -201,4 +201,3 @@ This keeps the change **atomic** and **serialized per product** without schema c
 - For per-entity serialization, **advisory locks** in Postgres are excellent.
 - For cross-process mutexes, a **Redis lock with TTL + safe unlock** is pragmatic.
 - Always **measure contention** and plan recovery for crashes/timeouts.
-
