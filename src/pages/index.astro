@@ -1,8 +1,20 @@
 ---
+import { getCollection } from 'astro:content'
 import Layout from '../layouts/Layout.astro'
 import ThemeToggle from '../components/ThemeToggle.astro'
 import TechStack from '../components/TechStack.astro'
 import CompanyLogo from '../components/CompanyLogo.astro'
+
+const projects = await getCollection('projects')
+const featured = projects
+  .filter((p) => p.data.featured)
+  .sort((a, b) => a.data.order - b.data.order)
+
+const statusLabel: Record<string, string> = {
+  live: 'Live',
+  wip: 'In development',
+  archived: 'Archived',
+}
 ---
 
 <Layout title="Irvan Eksa Mahendra - Software Engineer">
@@ -13,6 +25,7 @@ import CompanyLogo from '../components/CompanyLogo.astro'
           <div class="nav-links">
             <a href="#about">About</a>
             <a href="#experience">Experience</a>
+            <a href="/work">Work</a>
             <a href="#tech-stack">Tech Stack</a>
             <a href="/blog">Blog</a>
             <a href="#contact">Contact</a>
@@ -206,6 +219,57 @@ import CompanyLogo from '../components/CompanyLogo.astro'
               </div>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      <section id="work" class="section">
+        <div class="container">
+          <h2>Selected Work</h2>
+          <p class="section-description">
+            SaaS products I've built end-to-end — backend, frontend, and infrastructure.
+          </p>
+          <div class="work-grid">
+            {featured.map((p) => (
+              <article class="work-card">
+                <div class="work-card-header">
+                  <h3 class="work-card-name">{p.data.name}</h3>
+                  <span class={`work-status work-status--${p.data.status}`}>
+                    {statusLabel[p.data.status]}
+                  </span>
+                </div>
+                <p class="work-card-tagline">{p.data.tagline}</p>
+                <p class="work-card-description">{p.data.description}</p>
+                <div class="work-card-stack">
+                  {p.data.stack.slice(0, 5).map((s) => (
+                    <span class="work-stack-chip">{s}</span>
+                  ))}
+                </div>
+                <div class="work-card-links">
+                  {p.data.url && (
+                    <a href={p.data.url} target="_blank" rel="noopener noreferrer" class="work-link work-link--primary">
+                      Visit site
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 17L17 7"/><path d="M7 7h10v10"/>
+                      </svg>
+                    </a>
+                  )}
+                  {p.data.github && (
+                    <a href={p.data.github} target="_blank" rel="noopener noreferrer" class="work-link">
+                      GitHub
+                    </a>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+          <div class="selected-work-footer">
+            <a href="/work" class="selected-work-link">
+              See all work
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </a>
           </div>
         </div>
       </section>
