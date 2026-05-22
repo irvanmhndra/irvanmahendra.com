@@ -16,6 +16,7 @@ node_modules/
 # IDE
 .idea/
 .vscode/
+.claude/
 
 # Local assets not part of the site
 blog-cms-backup/
