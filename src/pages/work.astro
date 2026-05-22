@@ -1,0 +1,79 @@
+---
+import { getCollection } from 'astro:content'
+import Layout from '../layouts/Layout.astro'
+import ThemeToggle from '../components/ThemeToggle.astro'
+
+const projects = await getCollection('projects')
+const statusRank: Record<string, number> = { live: 0, wip: 1, archived: 2 }
+const sorted = projects.sort((a, b) => {
+  const s = statusRank[a.data.status] - statusRank[b.data.status]
+  if (s !== 0) return s
+  return a.data.order - b.data.order
+})
+
+const statusLabel: Record<string, string> = {
+  live: 'Live',
+  wip: 'In development',
+  archived: 'Archived',
+}
+---
+
+<Layout
+  title="Work - Irvan Eksa Mahendra"
+  description="SaaS products and side projects built and shipped by Irvan Eksa Mahendra."
+>
+  <div class="medium-blog">
+
+    <nav class="medium-nav">
+      <a href="/" class="medium-nav-logo">Irvan Mahendra</a>
+      <div class="medium-nav-links">
+        <a href="/work">Work</a>
+        <a href="/blog">Blog</a>
+        <ThemeToggle />
+      </div>
+    </nav>
+
+    <div class="medium-feed-header">
+      <h1>Work</h1>
+      <p>SaaS products I've built end-to-end — backend, frontend, infrastructure, and deployment.</p>
+    </div>
+
+    <main class="work-page">
+      <div class="work-grid">
+        {sorted.map((p) => (
+          <article class="work-card">
+            <div class="work-card-header">
+              <h2 class="work-card-name">{p.data.name}</h2>
+              <span class={`work-status work-status--${p.data.status}`}>
+                {statusLabel[p.data.status]}
+              </span>
+            </div>
+            <p class="work-card-tagline">{p.data.tagline}</p>
+            <p class="work-card-description">{p.data.description}</p>
+            <div class="work-card-stack">
+              {p.data.stack.map((s) => (
+                <span class="work-stack-chip">{s}</span>
+              ))}
+            </div>
+            <div class="work-card-links">
+              {p.data.url && (
+                <a href={p.data.url} target="_blank" rel="noopener noreferrer" class="work-link work-link--primary">
+                  Visit site
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 17L17 7"/><path d="M7 7h10v10"/>
+                  </svg>
+                </a>
+              )}
+              {p.data.github && (
+                <a href={p.data.github} target="_blank" rel="noopener noreferrer" class="work-link">
+                  GitHub
+                </a>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </main>
+
+  </div>
+</Layout>
