@@ -1,0 +1,10 @@
+{
+  "name": "FNB",
+  "tagline": "Restaurant operations from QR-code ordering to the kitchen line.",
+  "description": "Three apps in one product: an admin dashboard, a staff KDS + waiter map, and a QR-code customer PWA. Handles menus, orders, reservations, multi-branch reporting, and Midtrans payments — all offline-capable.",
+  "url": "https://fnb.irvanmahendra.com",
+  "stack": ["Go", "Echo", "PostgreSQL", "React", "PWA", "Midtrans"],
+  "status": "live",
+  "featured": true,
+  "order": 2
+}

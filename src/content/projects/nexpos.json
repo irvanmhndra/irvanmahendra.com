@@ -1,0 +1,10 @@
+{
+  "name": "Nexpos",
+  "tagline": "Multi-tenant point-of-sale for retail businesses.",
+  "description": "A full POS SaaS — sales, inventory, purchase orders, shifts, expenses, stock opname, and per-branch daily cash reconciliation. Built for small retailers who outgrew spreadsheets but can't justify enterprise software.",
+  "url": "https://nexpos.irvanmahendra.com",
+  "stack": ["Go", "Echo", "PostgreSQL", "React", "TanStack Query", "Tailwind"],
+  "status": "live",
+  "featured": true,
+  "order": 1
+}

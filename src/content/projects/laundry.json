@@ -1,0 +1,10 @@
+{
+  "name": "Laundry",
+  "tagline": "POS and operations for neighborhood laundry shops.",
+  "description": "Order lifecycle from drop-off to pickup, customer history, pickup/delivery scheduling with WhatsApp notifications, expenses, and cash drawer reconciliation. Thermal receipt printing included.",
+  "url": "https://laundry.irvanmahendra.com",
+  "stack": ["Go", "Echo", "PostgreSQL", "React", "Tailwind"],
+  "status": "live",
+  "featured": true,
+  "order": 3
+}
